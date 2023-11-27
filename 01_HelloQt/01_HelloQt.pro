@@ -15,11 +15,13 @@ CONFIG += c++17
 # 要参与编译的源文件
 SOURCES += \
     main.cpp \
-    mainwindow.cpp
+    mainwindow.cpp \
+    mybutton.cpp
 
 # 要参与编译的头文件
 HEADERS += \
-    mainwindow.h
+    mainwindow.h \
+    mybutton.h
 
 # 要参与编译的界面文件，如果界面是通过可视化搭建的话
 #FORMS += \

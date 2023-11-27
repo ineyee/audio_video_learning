@@ -51,3 +51,37 @@ LIBS += -L /usr/local/Cellar/ffmpeg/6.0-with-options_1/lib \
 # 以便可执行文件运行时能找到动态库，macOS上之所以不需要静态导入库，是因为编译器在编译时一旦发现要用到一些动态库会直接把类似于静态导入
 # 库这样的信息直接编译进可执行文件里，本质来说两平台还是一样的，只不过macOS少生成了一些文件
 #======================单平台开发配置=====================#
+
+#======================跨平台开发配置=====================#
+# macOS平台开发配置
+mac: {
+    # 因为##/usr/local/Cellar/ffmpeg/6.0-with-options_1##有点重复，所以我们可以定义一个FFMPEG_HOME来存放它，然后用$${FFMPEG_HOME}来引用它就可以了
+    FFMPEG_HOME = /usr/local/Cellar/ffmpeg/6.0
+    INCLUDEPATH += $${FFMPEG_HOME}/include
+    LIBS += -L $${FFMPEG_HOME}/lib \
+            -lavcodec \
+            -lavdevice \
+            -lavfilter \
+            -lavformat \
+            -lavutil \
+            -lpostproc \
+            -lswscale \
+            -lswresample
+}
+
+# Windows平台开发配置
+win32: {
+    # 因为F:/xx/xx/ffmpeg/6.0-with-options_1有点重复，所以我们可以定义一个FFMPEG_HOME来存放它，然后用$${FFMPEG_HOME}来引用它就可以了
+    FFMPEG_HOME = F:/xx/xx/ffmpeg/6.0
+    INCLUDEPATH += $${FFMPEG_HOME}/include
+    LIBS += -L $${FFMPEG_HOME}/lib \
+            -lavcodec \
+            -lavdevice \
+            -lavfilter \
+            -lavformat \
+            -lavutil \
+            -lpostproc \
+            -lswscale \
+            -lswresample
+}
+#======================跨平台开发配置=====================#

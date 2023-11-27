@@ -16,12 +16,16 @@ CONFIG += c++17
 SOURCES += \
     main.cpp \
     mainwindow.cpp \
-    mybutton.cpp
+    mybutton.cpp \
+    receiver.cpp \
+    sender.cpp
 
 # 要参与编译的头文件
 HEADERS += \
     mainwindow.h \
-    mybutton.h
+    mybutton.h \
+    receiver.h \
+    sender.h
 
 # 要参与编译的界面文件，如果界面是通过可视化搭建的话
 #FORMS += \

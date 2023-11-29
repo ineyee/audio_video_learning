@@ -22,6 +22,19 @@ AudioRecordThread::AudioRecordThread(QObject *parent)
 
 }
 
+AudioRecordThread::~AudioRecordThread() {
+    // 告诉音频录制线程录完最后一帧就不要录了，可以执行结束了
+//    setStop(true);
+    requestInterruption();
+
+    // 调一下这两个函数，固定写法，让线程稍微等一下、等线程执行结束再死，必须写在_stop = true;下面，否则就执行不到_stop = true;这一句了
+    quit();
+    wait();
+
+    qDebug() << "这里还是主线程：" << QThread::currentThread();
+    qDebug() << "音频线程生命周期结束、内存销毁了：" << this;
+}
+
 // 线程只要一启动就会自动调用它的run函数，run函数里的代码就是在子线程里执行的
 // 所以我们可以直接把耗时操作放在run函数里，这样耗时操作就是在子线程里执行了
 void AudioRecordThread::run() {

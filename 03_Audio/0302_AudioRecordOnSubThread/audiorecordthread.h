@@ -8,6 +8,7 @@ class AudioRecordThread : public QThread
     Q_OBJECT
 public:
     explicit AudioRecordThread(QObject *parent = nullptr);
+    ~AudioRecordThread();
 //    void setStop(bool stop);
 
 private:

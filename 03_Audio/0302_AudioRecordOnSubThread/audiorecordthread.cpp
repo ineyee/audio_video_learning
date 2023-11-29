@@ -19,7 +19,9 @@ extern "C" {
 AudioRecordThread::AudioRecordThread(QObject *parent)
     : QThread{parent}
 {
-
+    // 监听一下音频录制线程执行结束的时候主动释放一下该音频线程对应的内存
+    connect(this, &AudioRecordThread::finished,
+            this, &AudioRecordThread::deleteLater);
 }
 
 AudioRecordThread::~AudioRecordThread() {

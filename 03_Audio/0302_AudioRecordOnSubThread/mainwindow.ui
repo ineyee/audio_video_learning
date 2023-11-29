@@ -24,7 +24,7 @@
      </rect>
     </property>
     <property name="text">
-     <string>录音</string>
+     <string>开始录音</string>
     </property>
    </widget>
   </widget>

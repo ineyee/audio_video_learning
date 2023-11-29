@@ -30,8 +30,54 @@ void MainWindow::on_pushButton_clicked()
     // 同时我们会发现QThread的构造函数里有一个parent对象，我们完全可以把当前界面作为QThread的parent，parent的作用就是
     // 当parent销毁时也会销毁当前这个对象，所以但凡有parent的地方我们都可以这么做，不限于QWidget，这样我们就不用手动管理
     // 子线程对象的生命周期了
-    qDebug() << "这里是主线程：" << QThread::currentThread();
+    qDebug() << "按钮这里是主线程：" << QThread::currentThread();
 
-    AudioRecordThread *audioRecordThread = new AudioRecordThread(this);
-    audioRecordThread->start();
+    // 这次我们做一个小优化，不让音频线程固定采集240次了，而是我们点击停止录音才停止采集，可以由我们手动来控制
+    if (_isAudioRecording == false) { // 点击了“开始录音”
+        // 1、这里我们只需要创建一个音频录制线程，并启动就可以了
+        // 2、线程只要一启动就会自动调用它的run函数，run函数里的代码就是在子线程里执行的
+        // 3、然后等run函数里的代码执行完，这个线程就算执行结束了
+        // 4、但是需要注意的是线程执行结束和线程的生命周期结束是两回事，线程执行结束只是线程里的任务执行完了，这个线程的状态变成了
+        // finished，这个线程就不能再用了，但是这个线程对象在堆区的内存还在，也就是说它的生命周期也远没有结束，因为它的生命周期
+        // 是和当前MainWindow一样的
+        _isAudioRecording = true;
+
+        _audioRecordThread = new AudioRecordThread(this);
+        _audioRecordThread->start();
+        // 这里我们也监听一下，修复一下录音过程中出错了提前return导致按钮文字还是保持“停止录音”的bug
+        // 当然我们也可以放在AudioRecordThread构造函数那里的监听改，但毕竟改文字是和UI相关的，而那个音频线程类
+        // 就是跟录音相关的一系列东西，所以还是单独放在这里再监听一次吧
+        connect(_audioRecordThread, &AudioRecordThread::finished,
+                _audioRecordThread, [this] () -> void {
+                    _isAudioRecording = false;
+
+//                    _audioRecordThread->setStop(true);
+                    _audioRecordThread->requestInterruption();
+
+                    ui->pushButton->setText("开始录音");
+                });
+
+        // 注意所有跟UI相关的控件，我们都可以通过ui这个指针来获取到，直接指向控件的名字就可以了
+        // 一旦开始录音，我们就改变文本
+        ui->pushButton->setText("停止录音");
+    } else { // 点击了“停止录音”
+        // 录音注意点二：点击停止录音时，不要粗暴地销毁录音线程，避免丢掉最后一帧的部分数据或者无法正常释放资源，而是应该设置一个条件变量去打破录音线程的循环录制条件，让录音线程录完最后一帧正常结束
+        // 那我们就停止录音
+        // 那停止录音这件事需要做什么呢？其实我们最好不要直接销毁掉正在录音的那条音频线程，因为直接销毁掉的话，很有可能
+        // 出现的问题就是某一帧还在录、还没录完呢，你突然就把线程搞死了，这就导致那一帧是不完整的，而且run函数也会终止
+        // 地不明不白，很有可能无法执行到最后正常释放资源；所以实际开发中我们停止录音的正确做法其实不是销毁音频录制线程，
+        // 而是设置一个条件变量，去打破音频录制线程里那个循环录制的条件，告诉音频录制线程录完这一帧后就不要在录了，可以结束了（这里可以感觉到点击“停止录音”其实
+        // 不是立马停止录音吧？而是等一小小会，等录制线程录完正在录的最后一帧，并且正常释放完资源再真正停止录音），这样
+        // 就可以保证就算我们点击停止录音时那一帧录到一半也能正常录完最后一个完整的帧，同时run函数也能正常结束，该释放的资源都释放掉
+        _isAudioRecording = false;
+
+        // 但其实让音频录制线程结束的那个条件变量“_stop”，Qt已经帮我们提供了一个，我们其实不需要自己定义，
+        // 它就是requestInterruption，isInterruptionRequested()就相当于我们的_stop变量，requestInterruption()就相当于
+        // 我们的setStop(true)函数，当调用过线程的requestInterruption()函数时，isInterruptionRequested返回值就为true，
+        // 否则为false，两种实现办法的使用原理是一样的，所以我们可以直接使用系统提供的
+//        _audioRecordThread->setStop(true);
+        _audioRecordThread->requestInterruption();
+
+        ui->pushButton->setText("开始录音");
+    }
 }

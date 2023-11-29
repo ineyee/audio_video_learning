@@ -80,7 +80,8 @@ void AudioRecordThread::run() {
    // 所以没必要定义成指针，否则你还得自己去管理内存，这也可以回答我之前的疑问：对象到底定义成栈的还是堆的？只是局部用那就栈，省去自己管理内存的麻烦；如果不是一个函数局部用就堆，注意管理好内存），把采集到的每帧音频都存进去
    // 调用采集音频的函数时，只需要把这个帧对象的地址传进去就可以了，采集音频的函数内部就会往这个帧对象里写采集到的数据了
    // 注意现在我们写的所有的代码都是同步的，还没有涉及到多线程，所以代码绝对是顺序执行的，也就是说绝对是完完整整采集完一帧数据、然后再把这帧数据写入到文件里之后，才会开始下一帧数据的采集和存储
-   while (count <= 240) {
+//   while (_stop == false) {
+    while (isInterruptionRequested() == false) {
        AVPacket pkt;
        // 正如音频采集这个函数名av_read_frame所示，这个函数每调用一次就是采集一帧的音频数据
        // 从录音设备中采集一帧数据，返回值为0，代表这次采集成功
@@ -111,3 +112,8 @@ void AudioRecordThread::run() {
 
    qDebug() << "音频线程执行结束、停止录音了：" << QThread::currentThread();
 }
+
+//void AudioRecordThread::setStop(bool stop) {
+//    _stop = stop;
+//}
+
